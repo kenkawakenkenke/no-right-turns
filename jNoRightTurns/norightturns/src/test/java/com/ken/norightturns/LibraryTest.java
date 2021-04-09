@@ -4,11 +4,14 @@
 package com.ken.norightturns;
 
 import org.junit.Test;
+
+import com.ken.norightturns.analysis.Explore_ShortestPath;
+
 import static org.junit.Assert.*;
 
 public class LibraryTest {
     @Test public void testSomeLibraryMethod() {
-        Play classUnderTest = new Play();
+        Explore_ShortestPath classUnderTest = new Explore_ShortestPath();
         assertTrue("someLibraryMethod should return 'true'", classUnderTest.someLibraryMethod());
     }
 }

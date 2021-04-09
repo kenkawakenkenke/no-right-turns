@@ -10,11 +10,19 @@ plugins {
     // Apply the java-library plugin for API and implementation separation.
     id 'java-library'
     id 'eclipse'
+    id 'maven'
 }
 
 repositories {
     // Use JCenter for resolving dependencies.
     jcenter()
+    maven {
+        url 'http://mvn.topobyte.de'
+    }
+    maven {
+        url 'http://mvn.slimjars.com'
+    }
+    mavenCentral()
 }
 
 dependencies {
@@ -26,4 +34,20 @@ dependencies {
 
     // This dependency is used internally, and not exposed to consumers on their own compile classpath.
     implementation 'com.google.guava:guava:29.0-jre'
+    
+    compile 'de.topobyte:osm4j-xml:0.1.2'
+    compile 'de.topobyte:osm4j-pbf:0.1.1'
+    compile 'de.topobyte:osm4j-tbo:0.1.0'
+    compile 'de.topobyte:osm4j-geometry:0.1.0'
+
+    compile 'de.topobyte:adt-geo:0.0.4'
+    compile 'de.topobyte:jts2awt:0.0.1'
+    compile 'de.topobyte:mercator-image:0.0.2'
+
+    compile 'org.wololo:jts2geojson:0.6.0'
+    compile 'org.apache.commons:commons-compress:1.8'
+
+    compile 'org.slf4j:slf4j-api:1.6.1'
+    runtime 'org.slf4j:slf4j-log4j12:1.6.1'
+    runtime 'log4j:log4j:1.2.16'
 }
