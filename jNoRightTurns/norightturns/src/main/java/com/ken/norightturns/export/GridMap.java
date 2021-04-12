@@ -140,26 +140,28 @@ public class GridMap implements Serializable{
 			return segmentForID.values();
 		}
 		public Map<String, Object> toJSONMap() {
-			ImmutableMap<Long, Object> jsonCoordForID =
-			coordForID.entrySet()
-			.stream()
-			.collect(ImmutableMap.toImmutableMap(
-					e->e.getKey(), 
-					e->{
-						Coordinate coord = e.getValue();
-						return ImmutableMap.of("a", coord.latitude, "n", coord.longitude);
-					}));
+			ImmutableMap<String, Object> jsonCoordForID =
+				coordForID.entrySet()
+				.stream()
+				.collect(ImmutableMap.toImmutableMap(
+						e->e.getKey().toString(), 
+						e->{
+							Coordinate coord = e.getValue();
+							return ImmutableMap.of(
+									"lat", coord.latitude,
+									"lng", coord.longitude);
+						}));
 			
-			ImmutableMap<Integer, Object> jsonSegmentForID =
+			ImmutableMap<String, Object> jsonSegmentForID =
 					segmentForID.entrySet()
 					.stream()
 					.collect(ImmutableMap.toImmutableMap(
-							e->e.getKey(),
+							e->e.getKey().toString(),
 							e->e.getValue().toJSONMap()));
 			return ImmutableMap.of(
-					"c", cellID.toString(),
-					"ns", jsonCoordForID,
-					"ss", jsonSegmentForID
+					"cell", cellID.toString(),
+					"nodes", jsonCoordForID,
+					"segments", jsonSegmentForID
 					);
 		}
 	}

@@ -34,9 +34,7 @@ public class Explore_ShortestPath {
 		File nodeCache = new File("../../data/nodes.bin");
 		Map<Long, Coordinate> coordForID = (Map) ObjectEncoder.readObject(nodeCache);
 		System.out.println("Loaded "+coordForID.size()+" coords");
-		
-		// TODO: filter for coords used in segments.
-		
+
 		File segmentCache = new File("../../data/segments.bin");
 		List<Segment> segments = (List<Segment>)ObjectEncoder.readObject(segmentCache);
 		System.out.println("Loaded "+segments.size()+" segments");
