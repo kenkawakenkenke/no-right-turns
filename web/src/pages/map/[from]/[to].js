@@ -19,7 +19,9 @@ function parseCoordString(str) {
     };
 }
 export default function Home({ fromCoord, toCoord, shortestPath, tComputed }) {
-
+    if (!fromCoord || !toCoord || !shortestPath) {
+        return <div>computing...</div>;
+    }
     return (
         <div>
             <Head>
@@ -36,8 +38,15 @@ export default function Home({ fromCoord, toCoord, shortestPath, tComputed }) {
     )
 }
 
+export async function getStaticPaths() {
+    return {
+        paths: [],
+        fallback: true,
+    }
+}
+
 // This gets called on every request
-export async function getServerSideProps(context) {
+export async function getStaticProps(context) {
     const from = context.params.from;
     const to = context.params.to;
 
