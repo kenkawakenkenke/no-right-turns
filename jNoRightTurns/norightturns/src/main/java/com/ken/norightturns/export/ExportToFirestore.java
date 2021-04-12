@@ -3,22 +3,24 @@ package com.ken.norightturns.export;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import com.google.auth.oauth2.GoogleCredentials;
-import com.google.cloud.firestore.DocumentReference;
-import com.google.cloud.firestore.Firestore;
-import com.google.cloud.firestore.SetOptions;
-import com.google.cloud.firestore.WriteBatch;
-import com.google.common.collect.ImmutableList;
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.Bucket;
+import com.google.cloud.storage.Bucket.BlobTargetOption;
+import com.google.cloud.storage.Storage.PredefinedAcl;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
-import com.google.firebase.cloud.FirestoreClient;
+import com.google.firebase.cloud.StorageClient;
+import com.google.gson.Gson;
 import com.ken.norightturns.export.GridMap.GridCell;
 import com.ken.norightturns.segment.Segment;
 
+import common.ds.Tuple;
 import common.io.ObjectEncoder;
 import model.Coordinate;
 
@@ -33,11 +35,8 @@ public class ExportToFirestore {
 		FirebaseApp.initializeApp(options);
 	}
 
-	public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
-		setupFirebase();
-		
-		Firestore db = FirestoreClient.getFirestore();
-		
+	
+	public static GridMap loadGridMap() {
 		File nodeCache = new File("../../data/nodes.bin");
 		Map<Long, Coordinate> coordForID = (Map) ObjectEncoder.readObject(nodeCache);
 		
@@ -48,31 +47,37 @@ public class ExportToFirestore {
 		segments.stream()
 			.map(Segment::toDetailedSegment)
 			.forEach(segment -> gridMap.add(coordForID, segment));
+		return gridMap;
 
-		List<Map<String, Object>> rows = 
-				gridMap.cells().values()
-					.stream()
-					.map(GridCell::toJSONMap)
-					.collect(ImmutableList.toImmutableList());
+	}
+	public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
+		setupFirebase();
 		
-		final int batchSize = 10;
-		for(int i=0;i<rows.size();i+=batchSize) {
-			int toIndex = Math.min(i+batchSize, rows.size());
-			System.out.println("Writing from "+i+"~"+toIndex+ "(of "+rows.size()+")"
-					+ "");
-			
-			WriteBatch batch = db.batch();
-			
-			rows.subList(i, toIndex)
-			.forEach(row -> {
-				DocumentReference doc = 
-						db.collection("cell").document(row.get("cell").toString());
-				batch.set(doc, row, SetOptions.merge());
-			});
-			System.out.println("write");
-			batch.commit().get();
-		}
+		StorageClient client = com.google.firebase.cloud.StorageClient.getInstance();
+
+		Bucket bucket = client.bucket("no-right-turns-grid");
+
+		GridMap gridMap = loadGridMap();
 		
-		System.out.println("done");
+		gridMap.cells().values()
+		.stream()
+		.map(GridCell::toJSONMap)
+		.map(row -> new Tuple<>(row.get("cell").toString(), new Gson().toJson(row)))
+		.forEach(cellAndJson -> {
+			String cellID = cellAndJson.fst;
+			String json = cellAndJson.snd;
+			
+			try {
+				Blob exportedBlob = bucket.create(cellID, json.getBytes("UTF-8")
+						,BlobTargetOption.predefinedAcl(PredefinedAcl.PUBLIC_READ)
+						);
+				System.out.println(cellID+" "+exportedBlob.getMediaLink());
+			} catch (UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		});
+		
 	}
 }
