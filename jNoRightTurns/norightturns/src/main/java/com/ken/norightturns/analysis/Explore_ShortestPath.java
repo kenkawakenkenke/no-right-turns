@@ -11,15 +11,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.ken.norightturns.ConnectionType;
-import com.ken.norightturns.osm.ImportRawOSMData;
-import com.ken.norightturns.osm.Way;
+import com.ken.norightturns.export.GridMap;
+import com.ken.norightturns.export.MinimizedSegment;
 import com.ken.norightturns.search.NodeAndConnection;
 import com.ken.norightturns.search.SearchStrategy;
 import com.ken.norightturns.search.ShortestPathSearcher;
 import com.ken.norightturns.segment.Segment;
-import com.ken.norightturns.segment.Segmenter;
 
+import common.ds.Tuple;
 import common.gui.Draw;
 import common.io.ObjectEncoder;
 import model.Coordinate;
@@ -28,29 +30,22 @@ import viewer.panel.AbstractGISPanel;
 
 public class Explore_ShortestPath {
 
-	public static Long getNearestNode(List<Segment> segments, Coordinate coord, Map<Long, Coordinate> coordForID) {
-		double nearestDist = Double.MAX_VALUE;
-		Long nearest = null;
-		for (Segment segment : segments) {
-			for (long nodeID : segment.nodes) {
-				Coordinate otherCoord = coordForID.get(nodeID);
-				double dist = coord.distanceWith(otherCoord);
-				if (nearest == null || dist < nearestDist) {
-					nearest = nodeID;
-					nearestDist = dist;
-				}
-			}
-		}
-		return nearest;
-	}
-
 	public static void main(String[] args) throws FileNotFoundException {
-		
 		File nodeCache = new File("../../data/nodes.bin");
 		Map<Long, Coordinate> coordForID = (Map) ObjectEncoder.readObject(nodeCache);
+		System.out.println("Loaded "+coordForID.size()+" coords");
+		
+		// TODO: filter for coords used in segments.
 		
 		File segmentCache = new File("../../data/segments.bin");
 		List<Segment> segments = (List<Segment>)ObjectEncoder.readObject(segmentCache);
+		System.out.println("Loaded "+segments.size()+" segments");
+
+		GridMap gridMap = new GridMap(15);
+		List<MinimizedSegment> minimizedSegments = MinimizedSegment.toMinimizedSegments(gridMap, coordForID, segments);
+		segments.stream()
+			.map(Segment::toDetailedSegment)
+			.forEach(segment -> gridMap.add(coordForID, segment));
 
 		GISViewer viewer = new GISViewer();
 		viewer.gisView().setLevel(16);
@@ -59,32 +54,36 @@ public class Explore_ShortestPath {
 		viewer.gisView().panelManager().openPanel(new AbstractGISPanel(
 				AbstractGISPanel.MASK_HANDLE_MOUSEPRESSED | AbstractGISPanel.MASK_HANDLE_KEYPRESSED) {
 
-			Long firstNode = null;
-			Long lastNode = null;
+			Coordinate firstCoord = null;
+			Coordinate lastCoord = null;
 			List<NodeAndConnection> shortestPathNodesNoRightTurns = new ArrayList<>();
 			List<NodeAndConnection> shortestPathNodesShortest = new ArrayList<>();
 
 			@Override
 			public boolean mousePressed(int x, int y) {
 				Coordinate mouseCoord = parentView().coordAtScreenPoint(x, y);
-				Long node = getNearestNode(segments, mouseCoord, coordForID);
-
-				if (firstNode == null) {
-					firstNode = node;
-				} else if (lastNode == null) {
-					lastNode = node;
+				
+				if (firstCoord == null) {
+					firstCoord = mouseCoord;
+					System.out.println("first node: "+firstCoord);
+				} else if (lastCoord == null) {
+					lastCoord = mouseCoord;
+					System.out.println("last node: "+lastCoord);
 				} else {
-					firstNode = lastNode = null;
+					firstCoord = lastCoord = null;
 					shortestPathNodesNoRightTurns = new ArrayList<>();
 					shortestPathNodesShortest = new ArrayList<>();
 				}
 
-				if (firstNode != null && lastNode != null) {
-					shortestPathNodesNoRightTurns = ShortestPathSearcher.computeShortestPath(segments, firstNode, lastNode, SearchStrategy.NO_RIGHT_TURNS);
-					shortestPathNodesShortest = ShortestPathSearcher.computeShortestPath(segments, firstNode, lastNode, SearchStrategy.SHORTEST);
-					
-					System.out.println("no right turns: " + shortestPathNodesNoRightTurns.stream().filter(n -> n.connection == ConnectionType.RIGHT_TURN).count());
-					System.out.println("shortest: " + shortestPathNodesShortest.stream().filter(n -> n.connection == ConnectionType.RIGHT_TURN).count());
+				if (firstCoord != null && lastCoord != null) {
+					System.out.println("=======");
+					System.out.println("No right turns:");
+					shortestPathNodesNoRightTurns = ShortestPathSearcher.computeShortestPath(minimizedSegments,gridMap, firstCoord, lastCoord, SearchStrategy.NO_RIGHT_TURNS);
+					System.out.println("right: " + shortestPathNodesNoRightTurns.stream().filter(n -> n.connection == ConnectionType.RIGHT_TURN).count());
+
+//					System.out.println("shortest:");
+//					shortestPathNodesShortest = ShortestPathSearcher.computeShortestPath(segments, firstNode, lastNode, SearchStrategy.SHORTEST);
+//					System.out.println("right: " + shortestPathNodesShortest.stream().filter(n -> n.connection == ConnectionType.RIGHT_TURN).count());
 				}
 
 				repaint();
@@ -143,7 +142,7 @@ public class Explore_ShortestPath {
 
 			@Override
 			public void paint(Graphics2D g, int width, int height) {
-				drawSegments(g);
+//				drawSegments(g);
 
 				drawPath(g, shortestPathNodesNoRightTurns, Color.black);
 				drawPath(g, shortestPathNodesShortest, Color.gray);

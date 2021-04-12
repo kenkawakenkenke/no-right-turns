@@ -51,7 +51,7 @@ public class ImportRawOSMData {
 				boolean inRange = tl.longitude <= lng && lng <= br.longitude && tl.latitude >= lat
 						&& lat >= br.latitude;
 						
-				inRange = true;
+//				inRange = true;
 				
 				if (inRange) {
 					coordForID.computeIfAbsent(node.getId(),

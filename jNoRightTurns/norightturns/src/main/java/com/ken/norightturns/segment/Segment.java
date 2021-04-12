@@ -6,18 +6,20 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import com.ken.norightturns.ConnectionType;
+import com.ken.norightturns.export.DetailedSegment;
+import com.ken.norightturns.export.MinimizedSegment;
+import com.ken.norightturns.export.GridMap.CellID;
 
 import model.Coordinate;
 
 public class Segment implements Serializable {
 	private static final long serialVersionUID = 8238834004703266387L;
 	
-	final long parentWayID;
-	public final long id;
+	public final long parentWayID;
+	public final int id;
 	public final long[] nodes;
 	public final double[] distancesToEnd;
-	public Segment(long parentWayID, long id, List<Long> nodes, Map<Long, Coordinate> coordForID) {
+	public Segment(long parentWayID, int id, List<Long> nodes, Map<Long, Coordinate> coordForID) {
 		this.parentWayID = parentWayID;
 		this.id = id;
 		this.nodes = new long[nodes.size()];
@@ -45,12 +47,6 @@ public class Segment implements Serializable {
 	
 	public long start() {return nodes[0];}
 	public long end() {return nodes[nodes.length-1];}
-//	public Node start() {return nodes.get(0);}
-//	public Node end() {return nodes.get(nodes.size()-1);}
-	
-//	public Segment reverse(long id) {
-//		return new Segment(parentWayID, id, ListUtil.reverse(nodes));
-//	}
 	
 	private Collection<SegmentConnection> connections = new ArrayList<>();
 	public void setConnectingSegments(Collection<SegmentConnection> connections) {
@@ -59,19 +55,8 @@ public class Segment implements Serializable {
 	public Collection<SegmentConnection> connections() {
 		return connections;
 	}
-
-	public static class SegmentConnection implements Serializable{
 	
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 2435748261497597504L;
-	public final ConnectionType type;
-	public long nextSegmentID;
-	public SegmentConnection(ConnectionType type, long nextSegmentID) {
-		this.type = type;
-		this.nextSegmentID = nextSegmentID;
+	public DetailedSegment toDetailedSegment() {
+		return new DetailedSegment(id, nodes, distancesToEnd);
 	}
-}
-
 }

@@ -34,6 +34,7 @@ dependencies {
 
     // This dependency is used internally, and not exposed to consumers on their own compile classpath.
     implementation 'com.google.guava:guava:29.0-jre'
+    implementation 'com.google.code.gson:gson:2.8.6'
     
     compile 'de.topobyte:osm4j-xml:0.1.2'
     compile 'de.topobyte:osm4j-pbf:0.1.1'

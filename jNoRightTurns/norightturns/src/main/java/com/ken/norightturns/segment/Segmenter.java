@@ -11,7 +11,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.ken.norightturns.ConnectionType;
 import com.ken.norightturns.osm.Way;
-import com.ken.norightturns.segment.Segment.SegmentConnection;
 import com.ken.norightturns.util.IDGenerator;
 
 import common.ds.ListUtil;
@@ -26,12 +25,19 @@ public class Segmenter {
 
 		List<Segment> segments = new ArrayList<>();
 		List<Long> currentSegment = new ArrayList<>();
+		double currentSegmentLength = 0;
+		Coordinate prevNode = null;
 		for (Long node : way.nodes) {
-			int num = numForNode.getOrDefault(node, 0);
+			Coordinate coord = coordForID.get(node);
+			currentSegment.add(node);
+			if (prevNode!=null) {
+				currentSegmentLength+=prevNode.distanceWith(coord);
+			}
+			prevNode = coord;
 
-			if (num > 2 && currentSegment.size() > 0) {
+			int num = numForNode.getOrDefault(node, 0);
+			if (num > 2 && currentSegment.size() >=2 || currentSegmentLength>0.1) {
 				// Split the segment here.
-				currentSegment.add(node);
 				segments.add(new Segment(way.id, segmentIDGenerator.get(), currentSegment, coordForID));
 				if (!way.isOneWay) {
 					segments.add(new Segment(way.id, segmentIDGenerator.get(), ListUtil.reverse(currentSegment), coordForID));
@@ -40,9 +46,8 @@ public class Segmenter {
 				currentSegment = new ArrayList<>();
 				// Start with where we left off.
 				currentSegment.add(node);
-				continue;
+				currentSegmentLength = 0;
 			}
-			currentSegment.add(node);
 		}
 		if (currentSegment.size() >= 2) {
 			segments.add(new Segment(way.id, segmentIDGenerator.get(), currentSegment, coordForID));
@@ -155,6 +160,9 @@ public class Segmenter {
 		}
 	}
 
+	/**
+	 * Returned segments are guaranteed to have ids equal to the index in the list.
+	 */
 	public static List<Segment> generateSegments(List<Way> ways, Map<Long, Coordinate> coordForID) {
 		// Segment ways: Split ways into "segments" that:
 		// - don't have connections to other segments in internal nodes (i.e nodes that
