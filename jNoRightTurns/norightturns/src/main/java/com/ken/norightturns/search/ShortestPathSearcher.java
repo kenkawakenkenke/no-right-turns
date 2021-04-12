@@ -140,7 +140,7 @@ public class ShortestPathSearcher {
 					.filter(seg -> seg.id == segmentAndConnection.fst)
 					.findFirst()
 					.get();
-			System.out.println(i+": "+segmentAndConnection.fst);
+//			System.out.println(i+": "+segmentAndConnection.fst);
 //			Segment segment = segments.get(segmentAndConnection.fst);
 			if (i == reversedPickedSegments.size()-1) {
 				// First segment
@@ -210,12 +210,13 @@ public class ShortestPathSearcher {
 				nearestDist = dist;
 			}
 		}
+		System.out.println("dist: "+nearestDist);
 		// TODO: we should actually be looking in neighbouring cells too, if the
 		// edge border is closer than the nearest found node.
 		return new Tuple<>(nearest, cell);
 	}
 	
-	private static Set<DetailedSegment> getSegmentsContainingNode(GridCell cell, long node) {
+	private static List<DetailedSegment> getSegmentsContainingNode(GridCell cell, long node) {
 		return cell.segments()
 		.stream()
 		.filter(seg -> {
@@ -226,7 +227,7 @@ public class ShortestPathSearcher {
 			}
 			return false;
 		})
-		.collect(ImmutableSet.toImmutableSet());
+		.collect(ImmutableList.toImmutableList());
 	}
 	
 	public static List<NodeAndConnection> computeShortestPath(
@@ -241,9 +242,12 @@ public class ShortestPathSearcher {
 		long toNode = toNodeAndCell.fst;
 		GridCell toCell = toNodeAndCell.snd;
 		
-		Set<DetailedSegment> segmentsContainingFrom = getSegmentsContainingNode(fromCell, fromNode);
-		Set<DetailedSegment> segmentsContainingTo = getSegmentsContainingNode(toCell, toNode);
+		List<DetailedSegment> segmentsContainingFrom = getSegmentsContainingNode(fromCell, fromNode);
+		List<DetailedSegment> segmentsContainingTo = getSegmentsContainingNode(toCell, toNode);
 
+		System.out.println(segmentsContainingFrom.stream().map(seg -> seg.id).collect(ImmutableList.toImmutableList()));
+		System.out.println(segmentsContainingTo.stream().map(seg -> seg.id).collect(ImmutableList.toImmutableList()));
+		
 		//		// Check if we have any segments in common.
 		List<NodeAndConnection> nodes
 			= checkFromToIsSameSegment(segmentsContainingFrom, segmentsContainingTo, fromNode, toNode);

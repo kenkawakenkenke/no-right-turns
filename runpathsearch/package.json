@@ -1,0 +1,18 @@
+{
+  "name": "runpathsearch",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "deploy": "gcloud builds submit --tag gcr.io/no-right-turns/pathsearch && gcloud run deploy pathsearch --image gcr.io/no-right-turns/pathsearch --platform managed --memory 1Gi"
+  },
+  "author": "Ken Kawamoto <ken@kawamoto.co.uk> (http://kawamoto.co.uk/)",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "heap": "^0.2.6",
+    "node-fetch": "^2.6.1"
+  }
+}
