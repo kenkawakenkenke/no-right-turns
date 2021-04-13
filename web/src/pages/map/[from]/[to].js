@@ -1,13 +1,5 @@
-import Head from 'next/head'
-import dynamic from 'next/dynamic';
-import { useRouter } from "next/router";
 import { makeStyles } from '@material-ui/core/styles';
-import Typography from '@material-ui/core/Typography';
-import Alert from '@material-ui/lab/Alert';
-import Link from "next/link";
-import { DEFAULT_MAP_URL } from "../../../components/global.js";
-import { useEffect, useState } from 'react';
-import { useSpinner } from '../../../components/loadspinner.js';
+import { Map, TileLayer, Marker, Popup } from 'react-leaflet-universal';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -39,11 +31,6 @@ const useStyles = makeStyles((theme) => ({
     }
 }));
 
-const MapWithNoSSR = dynamic(
-    () => import('../../../components/map_universal'), {
-    ssr: false
-});
-
 function parseCoordString(str) {
     if (!str) {
         return { lat: 0, lng: 0 };
@@ -55,71 +42,26 @@ function parseCoordString(str) {
     };
 }
 
-function PathInfo({ path }) {
-    const numLeftTurns = path.filter(n => n.connectionType === "LEFT_TURN").length;
-    const numRightTurns = path.filter(n => n.connectionType === "RIGHT_TURN").length;
-    return <div>
-        左折回数：{numLeftTurns}回 右折回数：{numRightTurns}回
-    </div>;
-}
-
-function TopBanner({ serverStatus, tComputed, shortestPath }) {
-    const classes = useStyles();
-
-    return <div className={classes.topBanner}>
-        {serverStatus === "error" &&
-            <Alert severity="error">経路が探せません。遠すぎるか範囲外（東京の外）かも？</Alert>}
-
-        <Link href={DEFAULT_MAP_URL}><Typography variant="h5">絶対右折したくない検索</Typography></Link>
-        <Typography variant="body2">
-            運転が苦手な自分のために作った、右折せずに目的地まで行ける道を探す経路検索です。
-            現在東京都しか対応していません。
-        </Typography>
-        <div className={classes.warningMessage}>
-            <Typography variant="body2">
-                表示された経路は誤っているかもしれません。必ず実際の交通ルールに従って運転してください。
-            </Typography>
-        </div>
-        <Typography variant="body2">
-            作者：<a href="https://twitter.com/kenkawakenkenke" target="_blank">河本健</a>
-        </Typography>
-        {/* {shortestPath && shortestPath.path && <PathInfo path={shortestPath.path} />} */}
-    </div>;
-}
-
 export default function Home({ serverStatus, serverFromCoord, serverToCoord, serverShortestPath, tComputed }) {
     const classes = useStyles();
-    const router = useRouter();
-    const updateSpinner = useSpinner();
 
-    const [fromCoord, setFromCoord] = useState(serverFromCoord);
-    const [toCoord, setToCoord] = useState(serverToCoord);
-    const [shortestPath, setShortestPath] = useState(serverShortestPath);
-    const loading = !(!!(fromCoord && toCoord && shortestPath));
-    useEffect(() => {
-        setFromCoord(serverFromCoord);
-        setToCoord(serverToCoord);
-        setShortestPath(serverShortestPath);
-    }, [serverFromCoord, serverToCoord, serverShortestPath]);
-
-    useEffect(() => {
-        updateSpinner(loading);
-    }, [loading]);
-    function setNewFromToCallback(newFrom, newTo) {
-        setFromCoord(newFrom);
-        setToCoord(newTo);
-        setShortestPath(undefined);
-        router.push(`/map/${newFrom.lat},${newFrom.lng}/${newTo.lat},${newTo.lng}`);
-    }
-
+    const position = { lat: 51.505, lng: -0.09 };
+    const zoom = 10;
     return (
         <div className={classes.root}>
-            <MapWithNoSSR
-                fromCoord={fromCoord}
-                toCoord={toCoord}
-                shortestPath={shortestPath && shortestPath.path || []}
-                callback={setNewFromToCallback}
-            />
+            <Map
+                center={position} zoom={zoom}
+                style={{
+                    width: "100%",
+                    height: "100%",
+                    minHeight: "100px",
+                }}>
+                <TileLayer
+                    attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    opacity={0.8}
+                />
+            </Map>
         </div>
     )
 }
