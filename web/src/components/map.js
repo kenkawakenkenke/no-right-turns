@@ -87,6 +87,11 @@ function Map({ fromCoord, toCoord, shortestPath, callback }) {
 
     console.log("do resize");
     window.dispatchEvent(new Event('resize'));
+    if (mapRef) {
+        console.log("set bounds");
+        const bounds = computeBounds(fromCoord, toCoord, shortestPath);
+        mapRef.fitBounds(bounds);
+    }
 
     const pathPolyline =
         shortestPath.map(node => [node.lat, node.lng])
@@ -101,6 +106,7 @@ function Map({ fromCoord, toCoord, shortestPath, callback }) {
             return;
         }
         const bounds = computeBounds(fromCoord, toCoord, shortestPath);
+        console.log("set bounds");
         mapRef.fitBounds(bounds);
     }, [fromCoord, toCoord, shortestPath]);
 
