@@ -29,7 +29,8 @@ export default function Home({ serverStatus, serverFromCoord, serverToCoord, ser
                 center={position} zoom={zoom}
                 style={{
                     width: "100%",
-                    height: "100%",
+                    // height: "100%",
+                    height: "800px",
                     // minHeight: "300px",
                 }}>
                 <TileLayer
