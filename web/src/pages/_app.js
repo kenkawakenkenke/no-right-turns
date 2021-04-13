@@ -5,6 +5,7 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import theme from '../styles/theme.js';
 import { SpinnerContextProvider } from "../components/loadspinner.js";
 import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
+import "../backend/firebase.js";
 
 const useStyles = makeStyles((theme) => ({
   root: {
