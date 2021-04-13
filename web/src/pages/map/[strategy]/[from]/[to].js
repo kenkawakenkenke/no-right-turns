@@ -5,9 +5,11 @@ import { makeStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import Alert from '@material-ui/lab/Alert';
 import Link from "next/link";
-import { DEFAULT_MAP_URL } from "../../../components/global.js";
+import { DEFAULT_MAP_URL } from "../../../../components/global.js";
 import { useEffect, useState } from 'react';
-import { useSpinner } from '../../../components/loadspinner.js';
+import { useSpinner } from '../../../../components/loadspinner.js';
+import Checkbox from '@material-ui/core/Checkbox';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -39,7 +41,7 @@ const useStyles = makeStyles((theme) => ({
     }
 }));
 
-const MapWithNoSSR = dynamic(() => import('../../../components/map'), {
+const MapWithNoSSR = dynamic(() => import('../../../../components/map'), {
     ssr: false
 });
 
@@ -86,20 +88,26 @@ function TopBanner({ serverStatus, tComputed, shortestPath }) {
     </div>;
 }
 
-export default function Home({ serverStatus, serverFromCoord, serverToCoord, serverShortestPath, tComputed }) {
+export default function Home({ serverStatus, serverFromCoord, serverToCoord, serverShortestPath, serverStrategy, tComputed }) {
     const classes = useStyles();
     const router = useRouter();
+    function navigateTo(from, to, strategy) {
+        router.push(`/map/${strategy}/${from.lat},${from.lng}/${to.lat},${to.lng}`);
+    }
+
     const updateSpinner = useSpinner();
 
     const [fromCoord, setFromCoord] = useState(serverFromCoord);
     const [toCoord, setToCoord] = useState(serverToCoord);
+    const [strategy, setStrategy] = useState(serverStrategy);
     const [shortestPath, setShortestPath] = useState(serverShortestPath);
     const loading = !(!!(fromCoord && toCoord && shortestPath));
     useEffect(() => {
         setFromCoord(serverFromCoord);
         setToCoord(serverToCoord);
+        setStrategy(serverStrategy);
         setShortestPath(serverShortestPath);
-    }, [serverFromCoord, serverToCoord, serverShortestPath]);
+    }, [serverFromCoord, serverToCoord, serverStrategy, serverShortestPath]);
 
     useEffect(() => {
         updateSpinner(loading);
@@ -108,7 +116,12 @@ export default function Home({ serverStatus, serverFromCoord, serverToCoord, ser
         setFromCoord(newFrom);
         setToCoord(newTo);
         setShortestPath(undefined);
-        router.push(`/map/${newFrom.lat},${newFrom.lng}/${newTo.lat},${newTo.lng}`);
+        navigateTo(newFrom, newTo, strategy);
+    }
+    function setNewStrategy(newStrategy) {
+        setStrategy(newStrategy);
+        setShortestPath(undefined);
+        navigateTo(fromCoord, toCoord, newStrategy);
     }
 
     return (
@@ -123,6 +136,19 @@ export default function Home({ serverStatus, serverFromCoord, serverToCoord, ser
                     serverStatus={serverStatus}
                     tComputed={tComputed}
                     shortestPath={shortestPath} />
+                <div>
+                    <FormControlLabel
+                        control={<Checkbox
+                            checked={strategy === "NO_RIGHT_TURNS"}
+                            onChange={event => {
+                                setNewStrategy(event.target.checked ? "NO_RIGHT_TURNS" : "_");
+                            }}
+                            // icon={<FavoriteBorder />}
+                            // checkedIcon={<Favorite />}
+                            name="noRightTurns" />}
+                        label="右折禁止🚫"
+                    />
+                </div>
                 <div className={classes.mapContainer}>
                     <MapWithNoSSR
                         fromCoord={fromCoord}
@@ -147,13 +173,14 @@ export async function getStaticPaths() {
 export async function getStaticProps(context) {
     const from = context.params.from;
     const to = context.params.to;
+    const strategy = context.params.strategy || "NO_RIGHT_TURNS";
 
     const fromCoord = parseCoordString(from);
     const toCoord = parseCoordString(to);
 
     // console.log("server: ", fromCoord, toCoord);
     // const url = `http://localhost:8080/?fromLat=${fromCoord.lat}&fromLng=${fromCoord.lng}&toLat=${toCoord.lat}&toLng=${toCoord.lng}`;
-    const url = `https://pathsearch-em47pjgnhq-an.a.run.app/?fromLat=${fromCoord.lat}&fromLng=${fromCoord.lng}&toLat=${toCoord.lat}&toLng=${toCoord.lng}`;
+    const url = `https://pathsearch-em47pjgnhq-an.a.run.app/?fromLat=${fromCoord.lat}&fromLng=${fromCoord.lng}&toLat=${toCoord.lat}&toLng=${toCoord.lng}&strategy=${strategy}`;
 
     const data = await fetch(url);
     const json = await data.json();
@@ -164,6 +191,7 @@ export async function getStaticProps(context) {
             serverStatus: json.status,
             serverFromCoord: fromCoord,
             serverToCoord: toCoord,
+            serverStrategy: strategy,
             serverShortestPath: json,
             tComputed: new Date().getTime(),
             // ssData: ssData,
