@@ -80,6 +80,7 @@ function TopBanner({ serverStatus, tComputed, shortestPath }) {
 
 export default function Home({ serverStatus, fromCoord, toCoord, shortestPath, tComputed }) {
     const classes = useStyles();
+    console.log("loaded:", shortestPath);
 
     if (!fromCoord || !toCoord || !shortestPath) {
         return <div>computing...</div>;
