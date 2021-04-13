@@ -1,4 +1,5 @@
 import { makeStyles } from '@material-ui/core/styles';
+import { useEffect } from 'react';
 import { Map, TileLayer, Marker, Popup } from 'react-leaflet-universal';
 
 const useStyles = makeStyles((theme) => ({
@@ -23,14 +24,17 @@ export default function Home({ serverStatus, serverFromCoord, serverToCoord, ser
 
     const position = { lat: 51.505, lng: -0.09 };
     const zoom = 10;
+    useEffect(() => {
+        console.log("send resize event");
+        window.dispatchEvent(new Event('resize'));
+    }, [])
     return (
         <div className={classes.root}>
             <Map
                 center={position} zoom={zoom}
                 style={{
                     width: "100%",
-                    // height: "100%",
-                    height: "800px",
+                    height: "100%",
                     // minHeight: "300px",
                 }}>
                 <TileLayer
