@@ -92,7 +92,7 @@ export default function Home({ serverStatus, serverFromCoord, serverToCoord, ser
     const classes = useStyles();
     const router = useRouter();
     function navigateTo(from, to, strategy) {
-        router.push(`/map/${strategy}/${from.lat},${from.lng}/${to.lat},${to.lng}`);
+        router.push(`/map/${from.lat},${from.lng}/${to.lat},${to.lng}/${strategy}`);
     }
 
     const updateSpinner = useSpinner();

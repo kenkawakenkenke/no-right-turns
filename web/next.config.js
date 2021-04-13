@@ -8,6 +8,11 @@ module.exports = {
                 destination: DEFAULT_MAP_URL,
                 permanent: true,
             },
+            {
+                source: '/map/:from/:to',
+                destination: DEFAULT_MAP_URL,
+                permanent: false,
+            },
         ]
     },
 };
