@@ -27,6 +27,7 @@ const useStyles = makeStyles((theme) => ({
     },
     mapContainer: {
         flex: "1 1 auto",
+        minHeight: "100px",
     },
     errorMessage: {
         color: "red",
@@ -51,7 +52,15 @@ function parseCoordString(str) {
     };
 }
 
-export function TopBanner({ serverStatus, tComputed, shortestPath }) {
+function PathInfo({ path }) {
+    const numLeftTurns = path.filter(n => n.connectionType === "LEFT_TURN").length;
+    const numRightTurns = path.filter(n => n.connectionType === "RIGHT_TURN").length;
+    return <div>
+        左折回数：{numLeftTurns}回 右折回数：{numRightTurns}回
+    </div>;
+}
+
+function TopBanner({ serverStatus, tComputed, shortestPath }) {
     const classes = useStyles();
 
     return <div className={classes.topBanner}>
@@ -63,9 +72,9 @@ export function TopBanner({ serverStatus, tComputed, shortestPath }) {
             運転が苦手な自分のために作った、右折せずに目的地まで行ける道を探す経路検索です。
             現在東京都しか対応していません。
             <div className={classes.warningMessage}>表示された経路は誤っているかもしれません。必ず実際の交通ルールに従って運転してください。</div>
-            作者：<a href="https://twitter.com/kenkawakenkenke" target="_blank">河本健</a> -{" "}
-            <a href="https://github.com/kenkawakenkenke/no-right-turns" target="_blank">Githubで公開しています</a>
+            作者：<a href="https://twitter.com/kenkawakenkenke" target="_blank">河本健</a>
         </Typography>
+        {/* {shortestPath && shortestPath.path && <PathInfo path={shortestPath.path} />} */}
     </div>;
 }
 
@@ -85,7 +94,8 @@ export default function Home({ serverStatus, fromCoord, toCoord, shortestPath, t
             <main className={classes.main}>
                 <TopBanner
                     serverStatus={serverStatus}
-                    tComputed={tComputed} />
+                    tComputed={tComputed}
+                    shortestPath={shortestPath} />
                 <div className={classes.mapContainer}>
                     <MapWithNoSSR fromCoord={fromCoord} toCoord={toCoord} shortestPath={shortestPath.path || []} />
                 </div>
@@ -115,15 +125,6 @@ export async function getStaticProps(context) {
 
     const data = await fetch(url);
     const json = await data.json();
-
-    // const router = useRouter();
-    // const { from, to } = router.query;
-    // console.log(from, to);
-    // Fetch data from external API
-    // const res = await fetch(`https://.../data`)
-    // const data = await res.json()
-    // const ssData = "serverside data";
-    // console.log("serverside rendering!!");
 
     // Pass data to the page via props
     return {
