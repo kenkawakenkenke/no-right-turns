@@ -10,6 +10,7 @@ import {
     Popup
 } from 'react-leaflet'
 import { DEFAULT_FROM_COORD, DEFAULT_TO_COORD } from "./global.js";
+import { latLng } from 'leaflet';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -83,6 +84,7 @@ function Map({ fromCoord, toCoord, shortestPath }) {
 
     const pathPolyline =
         shortestPath.map(node => [node.lat, node.lng])
+    console.log("load map now");
 
     const fromMarkerRef = useRef(null)
     const toMarkerRef = useRef(null)

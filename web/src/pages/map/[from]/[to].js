@@ -85,6 +85,7 @@ export default function Home({ serverStatus, fromCoord, toCoord, shortestPath, t
     if (!fromCoord || !toCoord || !shortestPath) {
         return <div>computing...</div>;
     }
+    console.log("ok to render");
     return (
         <div className={classes.root}>
             <Head>
