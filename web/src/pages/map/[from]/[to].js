@@ -97,6 +97,16 @@ export default function Home({ serverStatus, fromCoord, toCoord, shortestPath, t
             <Head>
                 <title>絶対右折したくない経路検索</title>
                 <link rel="icon" href="/favicon.ico" />
+                <style global jsx>{`
+                    html,
+                    body,
+                    body > div:first-child,
+                    div#__next,
+                    div#__next > div {
+                        height: 100%;
+                    }
+                    `}
+                </style>
             </Head>
 
             <main className={classes.main}>
