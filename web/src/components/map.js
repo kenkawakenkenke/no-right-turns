@@ -24,6 +24,11 @@ function coordEquals(obj1, obj2) {
     return obj1.lat === obj2.lat && obj1.lng === obj2.lng;
 }
 
+const DEFAULT_BOUNDS = [
+    [35.7621781638664, 139.41293293617915],
+    [35.642820718714624, 139.84571170956804],
+];
+
 function computeBounds(fromCoord, toCoord, path) {
     const coords = [...path];
     if (fromCoord) {
@@ -33,10 +38,7 @@ function computeBounds(fromCoord, toCoord, path) {
         coords.push(toCoord);
     }
     if (coords.length === 0) {
-        return [
-            [35.7621781638664, 139.41293293617915],
-            [35.642820718714624, 139.84571170956804],
-        ];
+        return DEFAULT_BOUNDS;
     }
     let west = coords[0].lng;
     let east = coords[0].lng;
@@ -100,7 +102,7 @@ function Map({ fromCoord, toCoord, shortestPath, callback }) {
         const bounds = computeBounds(fromCoord, toCoord, shortestPath);
         console.log("set bounds: ", bounds);
         console.log("path: ", shortestPath);
-        mapRef.fitBounds(bounds);
+        // mapRef.fitBounds(bounds);
     }, [fromCoord, toCoord, shortestPath, mapRef]);
 
     const fromEventHandlers = {
@@ -133,6 +135,7 @@ function Map({ fromCoord, toCoord, shortestPath, callback }) {
                     setMapRef(mapInstance);
                 }}
                 // bounds={computeBounds(fromCoord, toCoord, shortestPath)}
+                bounds={DEFAULT_BOUNDS}
                 style={{
                     width: "100%",
                     height: "100%",
