@@ -124,7 +124,8 @@ function Map({ fromCoord, toCoord, shortestPath }) {
                 bounds={computeBounds(fromCoord, toCoord, shortestPath)}
                 style={{
                     width: "100%",
-                    height: "100%"
+                    height: "100%",
+                    minHeight: "100px",
                 }}>
                 <TileLayer
                     attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'

@@ -71,7 +71,13 @@ function TopBanner({ serverStatus, tComputed, shortestPath }) {
         <Typography variant="body2">
             運転が苦手な自分のために作った、右折せずに目的地まで行ける道を探す経路検索です。
             現在東京都しか対応していません。
-            <div className={classes.warningMessage}>表示された経路は誤っているかもしれません。必ず実際の交通ルールに従って運転してください。</div>
+        </Typography>
+        <div className={classes.warningMessage}>
+            <Typography variant="body2">
+                表示された経路は誤っているかもしれません。必ず実際の交通ルールに従って運転してください。
+            </Typography>
+        </div>
+        <Typography variant="body2">
             作者：<a href="https://twitter.com/kenkawakenkenke" target="_blank">河本健</a>
         </Typography>
         {/* {shortestPath && shortestPath.path && <PathInfo path={shortestPath.path} />} */}
