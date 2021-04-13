@@ -94,12 +94,14 @@ function Map({ fromCoord, toCoord, shortestPath, callback }) {
 
     useEffect(() => {
         if (!mapRef) {
-            console.log("mapt not set yet");
+            console.log("map not set yet");
             return;
         }
         const bounds = computeBounds(fromCoord, toCoord, shortestPath);
+        console.log("set bounds: ", bounds);
+        console.log("path: ", shortestPath);
         mapRef.fitBounds(bounds);
-    }, [fromCoord, toCoord, shortestPath]);
+    }, [fromCoord, toCoord, shortestPath, mapRef]);
 
     const fromEventHandlers = {
         dragend() {
