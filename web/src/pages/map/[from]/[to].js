@@ -6,6 +6,8 @@ import Typography from '@material-ui/core/Typography';
 import Alert from '@material-ui/lab/Alert';
 import Link from "next/link";
 import { DEFAULT_MAP_URL } from "../../../components/global.js";
+import { useEffect, useState } from 'react';
+import { useSpinner } from '../../../components/loadspinner.js';
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -84,14 +86,31 @@ function TopBanner({ serverStatus, tComputed, shortestPath }) {
     </div>;
 }
 
-export default function Home({ serverStatus, fromCoord, toCoord, shortestPath, tComputed }) {
+export default function Home({ serverStatus, serverFromCoord, serverToCoord, serverShortestPath, tComputed }) {
     const classes = useStyles();
-    console.log("loaded:", shortestPath);
+    const router = useRouter();
+    const updateSpinner = useSpinner();
 
-    if (!fromCoord || !toCoord || !shortestPath) {
-        return <div>computing...</div>;
+    const [fromCoord, setFromCoord] = useState(serverFromCoord);
+    const [toCoord, setToCoord] = useState(serverToCoord);
+    const [shortestPath, setShortestPath] = useState(serverShortestPath);
+    const loading = !(!!(fromCoord && toCoord && shortestPath));
+    useEffect(() => {
+        setFromCoord(serverFromCoord);
+        setToCoord(serverToCoord);
+        setShortestPath(serverShortestPath);
+    }, [serverFromCoord, serverToCoord, serverShortestPath]);
+
+    useEffect(() => {
+        updateSpinner(loading);
+    }, [loading]);
+    function setNewFromToCallback(newFrom, newTo) {
+        setFromCoord(newFrom);
+        setToCoord(newTo);
+        setShortestPath(undefined);
+        router.push(`/map/${newFrom.lat},${newFrom.lng}/${newTo.lat},${newTo.lng}`);
     }
-    console.log("ok to render");
+
     return (
         <div className={classes.root}>
             <Head>
@@ -105,7 +124,12 @@ export default function Home({ serverStatus, fromCoord, toCoord, shortestPath, t
                     tComputed={tComputed}
                     shortestPath={shortestPath} />
                 <div className={classes.mapContainer}>
-                    <MapWithNoSSR fromCoord={fromCoord} toCoord={toCoord} shortestPath={shortestPath.path || []} />
+                    <MapWithNoSSR
+                        fromCoord={fromCoord}
+                        toCoord={toCoord}
+                        shortestPath={shortestPath && shortestPath.path || []}
+                        callback={setNewFromToCallback}
+                    />
                 </div>
             </main>
         </div>
@@ -138,9 +162,9 @@ export async function getStaticProps(context) {
     return {
         props: {
             serverStatus: json.status,
-            fromCoord,
-            toCoord,
-            shortestPath: json,
+            serverFromCoord: fromCoord,
+            serverToCoord: toCoord,
+            serverShortestPath: json,
             tComputed: new Date().getTime(),
             // ssData: ssData,
         }

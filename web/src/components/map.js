@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import {
     MapContainer, TileLayer, Polyline, Rectangle, Circle,
@@ -10,7 +10,7 @@ import {
     Popup
 } from 'react-leaflet'
 import { DEFAULT_FROM_COORD, DEFAULT_TO_COORD } from "./global.js";
-import { latLng } from 'leaflet';
+import { useSpinner } from "../components/loadspinner.js";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -77,22 +77,29 @@ function ConnectionTypeMarkers({ path, connectionType, color }) {
     </LayerGroup>;
 }
 
-function Map({ fromCoord, toCoord, shortestPath }) {
+function Map({ fromCoord, toCoord, shortestPath, callback }) {
     const classes = useStyles();
-    const router = useRouter();
 
-    const pathLineOptions = { color: '#ff3333' };
+    const pathLineOptions = {
+        // color: '#e55555'
+        color: '#5555e5'
+    };
 
     const pathPolyline =
         shortestPath.map(node => [node.lat, node.lng])
-    console.log("load map now");
 
     const fromMarkerRef = useRef(null)
     const toMarkerRef = useRef(null)
+    const [mapRef, setMapRef] = useState();
 
-    function navigate(from, to) {
-        router.push(`/map/${from.lat},${from.lng}/${to.lat},${to.lng}`);
-    }
+    useEffect(() => {
+        if (!mapRef) {
+            console.log("mapt not set yet");
+            return;
+        }
+        const bounds = computeBounds(fromCoord, toCoord, shortestPath);
+        mapRef.fitBounds(bounds);
+    }, [fromCoord, toCoord, shortestPath]);
 
     const fromEventHandlers = {
         dragend() {
@@ -100,7 +107,7 @@ function Map({ fromCoord, toCoord, shortestPath }) {
             if (marker == null) {
                 return;
             }
-            navigate(marker.getLatLng(), toCoord);
+            callback(marker.getLatLng(), toCoord);
         },
     };
 
@@ -110,17 +117,19 @@ function Map({ fromCoord, toCoord, shortestPath }) {
             if (marker == null) {
                 return;
             }
-            console.log(marker.getLatLng());
-            navigate(fromCoord, marker.getLatLng());
+            callback(fromCoord, marker.getLatLng());
         },
     };
 
-    const fromUnchanged = coordEquals(DEFAULT_FROM_COORD, fromCoord);
-    const toUnchanged = coordEquals(DEFAULT_TO_COORD, toCoord);
+    const fromUnchanged = fromCoord && coordEquals(DEFAULT_FROM_COORD, fromCoord);
+    const toUnchanged = toCoord && coordEquals(DEFAULT_TO_COORD, toCoord);
 
     return (
         <div className={classes.root}>
             <MapContainer
+                whenCreated={mapInstance => {
+                    setMapRef(mapInstance);
+                }}
                 bounds={computeBounds(fromCoord, toCoord, shortestPath)}
                 style={{
                     width: "100%",
@@ -130,10 +139,10 @@ function Map({ fromCoord, toCoord, shortestPath }) {
                 <TileLayer
                     attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    opacity={0.7}
+                    opacity={0.8}
                 />
 
-                <Marker
+                {fromCoord && <Marker
                     draggable={true}
                     eventHandlers={fromEventHandlers}
                     position={fromCoord}
@@ -142,11 +151,11 @@ function Map({ fromCoord, toCoord, shortestPath }) {
                 >
                     <Tooltip permanent
                     >
-                        出発地{fromUnchanged && "：ドラッグして変えてみよう！"}
+                        出発地{fromUnchanged && "：ドラッグで動かす"}
                     </Tooltip>
-                </Marker>
+                </Marker>}
 
-                <Marker
+                {toCoord && <Marker
                     draggable={true}
                     eventHandlers={toEventHandlers}
                     position={toCoord}
@@ -155,9 +164,9 @@ function Map({ fromCoord, toCoord, shortestPath }) {
                 >
                     <Tooltip permanent
                     >
-                        目的地{toUnchanged && "：ドラッグして変えてみよう！"}
+                        目的地{toUnchanged && "：ドラッグで動かす"}
                     </Tooltip>
-                </Marker>
+                </Marker>}
 
                 <Polyline pathOptions={pathLineOptions} positions={pathPolyline} />
 

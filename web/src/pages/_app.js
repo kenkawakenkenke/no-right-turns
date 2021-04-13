@@ -3,6 +3,8 @@ import React from 'react'
 import { makeStyles, ThemeProvider } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import theme from '../styles/theme.js';
+import { SpinnerContextProvider } from "../components/loadspinner.js";
+import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -57,12 +59,15 @@ const App = ({ Component, pageProps }) => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
 
-      {/* <ToastContextProvider> */}
-      {/* <ConfirmDialogContextProvider> */}
+      <SpinnerContextProvider>
+        {/* <ToastContextProvider> */}
+        {/* <ConfirmDialogContextProvider> */}
 
-      <Root>
-        <Component {...pageProps} />
-      </Root>
+        <Root>
+          <Component {...pageProps} />
+        </Root>
+
+      </SpinnerContextProvider>
 
       {/* </ConfirmDialogContextProvider> */}
       {/* </ToastContextProvider> */}
