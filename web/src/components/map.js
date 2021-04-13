@@ -2,9 +2,58 @@ import { useRouter } from 'next/router';
 import React, { useRef } from 'react';
 import {
     MapContainer, TileLayer, Polyline, Rectangle, Circle,
+    CircleMarker,
+    LayerGroup,
+    Tooltip,
     Marker,
     Popup
 } from 'react-leaflet'
+
+function computeBounds(path) {
+    if (path.length === 0) {
+        return [
+            [35.7621781638664, 139.41293293617915],
+            [35.642820718714624, 139.84571170956804],
+        ];
+    }
+    let west = path[0].lng;
+    let east = path[0].lng;
+    let north = path[0].lat;
+    let south = path[0].lat;
+    path.forEach(coord => {
+        west = Math.min(west, coord.lng);
+        east = Math.max(east, coord.lng);
+        north = Math.max(north, coord.lat);
+        south = Math.min(south, coord.lat);
+    });
+    const centerLng = (west + east) / 2;
+    const centerLat = (north + south) / 2;
+    const expander = 1.1;
+    west = (west - centerLng) * expander + centerLng;
+    east = (east - centerLng) * expander + centerLng;
+    north = (north - centerLat) * expander + centerLat;
+    south = (south - centerLat) * expander + centerLat;
+    return [
+        [north, west],
+        [south, east]
+    ];
+}
+
+function ConnectionTypeMarkers({ path, connectionType, color }) {
+    const nodesOfInterest = path
+        .filter(node =>
+            node.connectionType === connectionType);
+
+    return <LayerGroup>
+        {nodesOfInterest.map((turn, idx) =>
+            <Circle
+                key={`turn_${connectionType}_${idx}`}
+                center={[turn.lat, turn.lng]}
+                pathOptions={{ color }}
+                radius={20} />
+        )}
+    </LayerGroup>;
+}
 
 function Map({ fromCoord, toCoord, shortestPath }) {
     const router = useRouter();
@@ -55,14 +104,15 @@ function Map({ fromCoord, toCoord, shortestPath }) {
     return (
         <div className="map-root">
             <MapContainer
-                center={mapState.center}
-                zoom={mapState.zoom}
+                bounds={computeBounds(shortestPath)}
                 style={{
+                    width: "100%",
                     height: "700px"
                 }}>
                 <TileLayer
                     attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    opacity={0.7}
                 />
 
                 <Marker
@@ -72,6 +122,8 @@ function Map({ fromCoord, toCoord, shortestPath }) {
                     animate={true}
                     ref={fromMarkerRef}
                 >
+                    <Tooltip permanent
+                    >Start!</Tooltip>
                 </Marker>
 
                 <Marker
@@ -81,10 +133,20 @@ function Map({ fromCoord, toCoord, shortestPath }) {
                     animate={true}
                     ref={toMarkerRef}
                 >
+                    <Tooltip permanent
+                    >End!</Tooltip>
                 </Marker>
 
                 <Polyline pathOptions={pathLineOptions} positions={pathPolyline} />
 
+                <ConnectionTypeMarkers
+                    path={shortestPath}
+                    connectionType="LEFT_TURN"
+                    color="orange" />
+                <ConnectionTypeMarkers
+                    path={shortestPath}
+                    connectionType="RIGHT_TURN"
+                    color="red" />
             </MapContainer>
             {/* <style jsx>{`
             .map - root {

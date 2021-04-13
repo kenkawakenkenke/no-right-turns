@@ -25,13 +25,12 @@ export default function Home({ fromCoord, toCoord, shortestPath, tComputed }) {
     return (
         <div>
             <Head>
-                <title>Create Next App</title>
+                <title>絶対右折したくない経路検索</title>
                 <link rel="icon" href="/favicon.ico" />
             </Head>
 
             <main>
                 <p>computed:{new Date(tComputed).toString()}</p>
-                Hey lat:{JSON.stringify(fromCoord)} lng:{JSON.stringify(toCoord)}
                 <MapWithNoSSR fromCoord={fromCoord} toCoord={toCoord} shortestPath={shortestPath.path} />
             </main>
         </div>
@@ -54,8 +53,8 @@ export async function getStaticProps(context) {
     const toCoord = parseCoordString(to);
 
     console.log("server: ", fromCoord, toCoord);
-    const url = `http://localhost:8080/?fromLat=${fromCoord.lat}&fromLng=${fromCoord.lng}&toLat=${toCoord.lat}&toLng=${toCoord.lng}`;
-    // const url = `https://pathsearch-em47pjgnhq-an.a.run.app/?fromLat=${fromCoord.lat}&fromLng=${fromCoord.lng}&toLat=${toCoord.lat}&toLng=${toCoord.lng}`;
+    // const url = `http://localhost:8080/?fromLat=${fromCoord.lat}&fromLng=${fromCoord.lng}&toLat=${toCoord.lat}&toLng=${toCoord.lng}`;
+    const url = `https://pathsearch-em47pjgnhq-an.a.run.app/?fromLat=${fromCoord.lat}&fromLng=${fromCoord.lng}&toLat=${toCoord.lat}&toLng=${toCoord.lng}`;
 
     const data = await fetch(url);
     const json = await data.json();
