@@ -16,6 +16,7 @@ const useStyles = makeStyles((theme) => ({
     root: {
         // backgroundColor: "red",
         height: "100%",
+        minHeight: "100px",
     },
 }));
 
