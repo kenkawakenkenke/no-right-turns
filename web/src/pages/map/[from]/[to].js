@@ -1,8 +1,40 @@
 import Head from 'next/head'
 import dynamic from 'next/dynamic';
 import { useRouter } from "next/router";
+import { makeStyles } from '@material-ui/core/styles';
+import Typography from '@material-ui/core/Typography';
+import Alert from '@material-ui/lab/Alert';
+import Link from "next/link";
+import { DEFAULT_MAP_URL } from "../../../components/global.js";
 
-// import styles from '../styles/Home.module.css'
+const useStyles = makeStyles((theme) => ({
+    root: {
+        // backgroundColor: "blue",
+        height: "100%",
+    },
+    topBanner: {
+        flexShrink: "1",
+        flexGrow: "0",
+        // backgroundColor: "gray",
+        paddingLeft: "4px",
+        paddingRight: "4px",
+    },
+    main: {
+        display: "flex",
+        // backgroundColor: "yellow",
+        height: "100%",
+        flexDirection: "column",
+    },
+    mapContainer: {
+        flex: "1 1 auto",
+    },
+    errorMessage: {
+        color: "red",
+    },
+    warningMessage: {
+        backgroundColor: "#ffffcc",
+    }
+}));
 
 const MapWithNoSSR = dynamic(() => import('../../../components/map'), {
     ssr: false
@@ -18,20 +50,45 @@ function parseCoordString(str) {
         lng: parseFloat(match[2]),
     };
 }
-export default function Home({ fromCoord, toCoord, shortestPath, tComputed }) {
+
+export function TopBanner({ serverStatus, tComputed, shortestPath }) {
+    const classes = useStyles();
+
+    return <div className={classes.topBanner}>
+        {serverStatus === "error" &&
+            <Alert severity="error">経路が探せません。遠すぎるか範囲外（東京の外）かも？</Alert>}
+
+        <Link href={DEFAULT_MAP_URL}><Typography variant="h5">絶対右折したくない検索</Typography></Link>
+        <Typography variant="body2">
+            運転が苦手な自分のために作った、右折せずに目的地まで行ける道を探す経路検索です。
+            現在東京都しか対応していません。
+            <div className={classes.warningMessage}>表示された経路は誤っているかもしれません。必ず実際の交通ルールに従って運転してください。</div>
+            作者：<a href="https://twitter.com/kenkawakenkenke" target="_blank">河本健</a> -{" "}
+            <a href="https://github.com/kenkawakenkenke/no-right-turns" target="_blank">Githubで公開しています</a>
+        </Typography>
+    </div>;
+}
+
+export default function Home({ serverStatus, fromCoord, toCoord, shortestPath, tComputed }) {
+    const classes = useStyles();
+
     if (!fromCoord || !toCoord || !shortestPath) {
         return <div>computing...</div>;
     }
     return (
-        <div>
+        <div className={classes.root}>
             <Head>
                 <title>絶対右折したくない経路検索</title>
                 <link rel="icon" href="/favicon.ico" />
             </Head>
 
-            <main>
-                <p>computed:{new Date(tComputed).toString()}</p>
-                <MapWithNoSSR fromCoord={fromCoord} toCoord={toCoord} shortestPath={shortestPath.path} />
+            <main className={classes.main}>
+                <TopBanner
+                    serverStatus={serverStatus}
+                    tComputed={tComputed} />
+                <div className={classes.mapContainer}>
+                    <MapWithNoSSR fromCoord={fromCoord} toCoord={toCoord} shortestPath={shortestPath.path || []} />
+                </div>
             </main>
         </div>
     )
@@ -52,7 +109,7 @@ export async function getStaticProps(context) {
     const fromCoord = parseCoordString(from);
     const toCoord = parseCoordString(to);
 
-    console.log("server: ", fromCoord, toCoord);
+    // console.log("server: ", fromCoord, toCoord);
     // const url = `http://localhost:8080/?fromLat=${fromCoord.lat}&fromLng=${fromCoord.lng}&toLat=${toCoord.lat}&toLng=${toCoord.lng}`;
     const url = `https://pathsearch-em47pjgnhq-an.a.run.app/?fromLat=${fromCoord.lat}&fromLng=${fromCoord.lng}&toLat=${toCoord.lat}&toLng=${toCoord.lng}`;
 
@@ -71,6 +128,7 @@ export async function getStaticProps(context) {
     // Pass data to the page via props
     return {
         props: {
+            serverStatus: json.status,
             fromCoord,
             toCoord,
             shortestPath: json,

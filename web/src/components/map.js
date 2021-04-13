@@ -1,5 +1,6 @@
 import { useRouter } from 'next/router';
 import React, { useRef } from 'react';
+import { makeStyles } from '@material-ui/core/styles';
 import {
     MapContainer, TileLayer, Polyline, Rectangle, Circle,
     CircleMarker,
@@ -8,19 +9,38 @@ import {
     Marker,
     Popup
 } from 'react-leaflet'
+import { DEFAULT_FROM_COORD, DEFAULT_TO_COORD } from "./global.js";
 
-function computeBounds(path) {
-    if (path.length === 0) {
+const useStyles = makeStyles((theme) => ({
+    root: {
+        // backgroundColor: "red",
+        height: "100%",
+    },
+}));
+
+function coordEquals(obj1, obj2) {
+    return obj1.lat === obj2.lat && obj1.lng === obj2.lng;
+}
+
+function computeBounds(fromCoord, toCoord, path) {
+    const coords = [...path];
+    if (fromCoord) {
+        coords.push(fromCoord);
+    }
+    if (toCoord) {
+        coords.push(toCoord);
+    }
+    if (coords.length === 0) {
         return [
             [35.7621781638664, 139.41293293617915],
             [35.642820718714624, 139.84571170956804],
         ];
     }
-    let west = path[0].lng;
-    let east = path[0].lng;
-    let north = path[0].lat;
-    let south = path[0].lat;
-    path.forEach(coord => {
+    let west = coords[0].lng;
+    let east = coords[0].lng;
+    let north = coords[0].lat;
+    let south = coords[0].lat;
+    coords.forEach(coord => {
         west = Math.min(west, coord.lng);
         east = Math.max(east, coord.lng);
         north = Math.max(north, coord.lat);
@@ -56,22 +76,13 @@ function ConnectionTypeMarkers({ path, connectionType, color }) {
 }
 
 function Map({ fromCoord, toCoord, shortestPath }) {
+    const classes = useStyles();
     const router = useRouter();
-
-    const mapState = {
-        center: [35.69820027307606, 139.4731736718688],
-        // marker: {
-        //     lat: 31.698956,
-        //     lng: 76.732407,
-        // },
-        zoom: 11,
-        draggable: true,
-    };
 
     const pathLineOptions = { color: '#ff3333' };
 
     const pathPolyline =
-        shortestPath.map(node => [node.lat, node.lng]);
+        shortestPath.map(node => [node.lat, node.lng])
 
     const fromMarkerRef = useRef(null)
     const toMarkerRef = useRef(null)
@@ -101,13 +112,16 @@ function Map({ fromCoord, toCoord, shortestPath }) {
         },
     };
 
+    const fromUnchanged = coordEquals(DEFAULT_FROM_COORD, fromCoord);
+    const toUnchanged = coordEquals(DEFAULT_TO_COORD, toCoord);
+
     return (
-        <div className="map-root">
+        <div className={classes.root}>
             <MapContainer
-                bounds={computeBounds(shortestPath)}
+                bounds={computeBounds(fromCoord, toCoord, shortestPath)}
                 style={{
                     width: "100%",
-                    height: "700px"
+                    height: "100%"
                 }}>
                 <TileLayer
                     attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
@@ -123,7 +137,9 @@ function Map({ fromCoord, toCoord, shortestPath }) {
                     ref={fromMarkerRef}
                 >
                     <Tooltip permanent
-                    >Start!</Tooltip>
+                    >
+                        出発地{fromUnchanged && "：ドラッグして変えてみよう！"}
+                    </Tooltip>
                 </Marker>
 
                 <Marker
@@ -134,7 +150,9 @@ function Map({ fromCoord, toCoord, shortestPath }) {
                     ref={toMarkerRef}
                 >
                     <Tooltip permanent
-                    >End!</Tooltip>
+                    >
+                        目的地{toUnchanged && "：ドラッグして変えてみよう！"}
+                    </Tooltip>
                 </Marker>
 
                 <Polyline pathOptions={pathLineOptions} positions={pathPolyline} />
@@ -148,17 +166,6 @@ function Map({ fromCoord, toCoord, shortestPath }) {
                     connectionType="RIGHT_TURN"
                     color="red" />
             </MapContainer>
-            {/* <style jsx>{`
-            .map - root {
-                height: 100 %;
-            }
-                .leaflet - container {
-                    height: 400px!important;
-                    width: 80 %;
-                    margin: 0 auto;
-                }
-            `}
-                </style> */}
         </div>
     );
     // }
