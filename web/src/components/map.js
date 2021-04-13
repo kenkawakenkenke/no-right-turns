@@ -88,8 +88,8 @@ function Map({ fromCoord, toCoord, shortestPath, callback }) {
     console.log("do resize");
     window.dispatchEvent(new Event('resize'));
     if (mapRef) {
-        console.log("set bounds");
         const bounds = computeBounds(fromCoord, toCoord, shortestPath);
+        console.log("set bounds", bounds);
         mapRef.fitBounds(bounds);
     }
 
@@ -139,7 +139,7 @@ function Map({ fromCoord, toCoord, shortestPath, callback }) {
                 whenCreated={mapInstance => {
                     setMapRef(mapInstance);
                 }}
-                bounds={computeBounds(fromCoord, toCoord, shortestPath)}
+                // bounds={computeBounds(fromCoord, toCoord, shortestPath)}
                 style={{
                     width: "100%",
                     height: "100%",
