@@ -85,6 +85,13 @@ function Map({ fromCoord, toCoord, shortestPath, callback }) {
         color: '#5555e5'
     };
 
+    const pathPolyline =
+        shortestPath.map(node => [node.lat, node.lng])
+
+    const fromMarkerRef = useRef(null)
+    const toMarkerRef = useRef(null)
+    const [mapRef, setMapRef] = useState();
+
     console.log("do resize");
     window.dispatchEvent(new Event('resize'));
     const bounds = computeBounds(fromCoord, toCoord, shortestPath);
@@ -92,13 +99,6 @@ function Map({ fromCoord, toCoord, shortestPath, callback }) {
         console.log("set bounds", bounds);
         mapRef.fitBounds(bounds);
     }
-
-    const pathPolyline =
-        shortestPath.map(node => [node.lat, node.lng])
-
-    const fromMarkerRef = useRef(null)
-    const toMarkerRef = useRef(null)
-    const [mapRef, setMapRef] = useState();
 
     useEffect(() => {
         if (!mapRef) {
