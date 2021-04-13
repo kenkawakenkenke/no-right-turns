@@ -39,7 +39,8 @@ const useStyles = makeStyles((theme) => ({
     }
 }));
 
-const MapWithNoSSR = dynamic(() => import('../../../components/map'), {
+const MapWithNoSSR = dynamic(
+    () => import('../../../components/map_universal'), {
     ssr: false
 });
 
