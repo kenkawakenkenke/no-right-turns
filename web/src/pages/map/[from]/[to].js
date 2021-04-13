@@ -114,25 +114,12 @@ export default function Home({ serverStatus, serverFromCoord, serverToCoord, ser
 
     return (
         <div className={classes.root}>
-            <Head>
-                <title>絶対右折したくない経路検索</title>
-                <link rel="icon" href="/favicon.ico" />
-            </Head>
-
-            <main className={classes.main}>
-                <TopBanner
-                    serverStatus={serverStatus}
-                    tComputed={tComputed}
-                    shortestPath={shortestPath} />
-                <div className={classes.mapContainer}>
-                    <MapWithNoSSR
-                        fromCoord={fromCoord}
-                        toCoord={toCoord}
-                        shortestPath={shortestPath && shortestPath.path || []}
-                        callback={setNewFromToCallback}
-                    />
-                </div>
-            </main>
+            <MapWithNoSSR
+                fromCoord={fromCoord}
+                toCoord={toCoord}
+                shortestPath={shortestPath && shortestPath.path || []}
+                callback={setNewFromToCallback}
+            />
         </div>
     )
 }

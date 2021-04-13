@@ -37,16 +37,5 @@ export const SpinnerContextProvider = ({ children }) => {
     return <SpinnerContext.Provider value={setShowSpinner}>
         {children}
 
-        {showSpinner &&
-            <div className={classes.spinnerOverlayView}>
-                <Loader
-                    className={classes.spinner}
-                    type="ThreeDots"
-                    color="#222222"
-                    height={100}
-                    width={100}
-                />
-            </div>}
-
     </SpinnerContext.Provider >;
 }
