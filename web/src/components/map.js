@@ -85,6 +85,9 @@ function Map({ fromCoord, toCoord, shortestPath, callback }) {
         color: '#5555e5'
     };
 
+    console.log("do resize");
+    window.dispatchEvent(new Event('resize'));
+
     const pathPolyline =
         shortestPath.map(node => [node.lat, node.lng])
 
@@ -94,7 +97,7 @@ function Map({ fromCoord, toCoord, shortestPath, callback }) {
 
     useEffect(() => {
         if (!mapRef) {
-            console.log("mapt not set yet");
+            console.log("map not set yet");
             return;
         }
         const bounds = computeBounds(fromCoord, toCoord, shortestPath);
