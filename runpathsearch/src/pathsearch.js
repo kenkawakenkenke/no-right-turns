@@ -25,9 +25,9 @@ async function getNearestNodeAndCell(gridMap, coord) {
     // TODO: we should actually be looking in neighbouring cells too, if the
     // edge border is closer than the nearest found node.
     return {
-        nearestNodeID,
-        nearestCell: cell,
-    }
+        nodeID: nearestNodeID,
+        cell: cell,
+    };
 }
 
 function getSegmentsContainingNode(cell, nodeID) {
@@ -227,6 +227,23 @@ async function toNodes(
     fromNode,
     toNode,
     reversedPickedSegments) {
+    // Prefetch cells in parallel
+    {
+        const cells = {};
+        for (let i = reversedPickedSegments.length - 1; i >= 0; i--) {
+            let segmentAndConnection = reversedPickedSegments[i];
+            const minimizedSegment = minimizedSegments[segmentAndConnection.segment];
+            cells[minimizedSegment.c] = true;
+        }
+        const cellIDs = Object.keys(cells)
+            .map(c => unflattenCellID(c));
+        await gridMap.prefetch(cellIDs);
+        console.log("prefetch done");
+        // await Promise.all(Object.keys(cells)
+        //     .map(c => unflattenCellID(c))
+        //     .map(cellID => gridMap.cellFor(cellID)));
+    }
+
     const nodes = [];
     let connectionFromPrevSegment = null;
     for (let i = reversedPickedSegments.length - 1; i >= 0; i--) {
@@ -260,31 +277,66 @@ async function toNodes(
     return nodes;
 }
 
+// async function fetchTest() {
+//     const db = admin.firestore();
+//     const doc = await db.collection("cell").doc("29066_12889").get();
+//     console.log(doc.data());
+// }
+
 export default async function getShortestPath(fromCoord, toCoord, strategy) {
-    const gridMap = new GridMap(15);
+    try {
+        const gridMap = new GridMap(15);
 
-    const { nearestNodeID: fromNode, nearestCell: fromCell } = await getNearestNodeAndCell(gridMap, fromCoord);
-    const { nearestNodeID: toNode, nearestCell: toCell } = await getNearestNodeAndCell(gridMap, toCoord);
+        const tStart = Date.now();
+        let tPrev = Date.now();
 
-    const segmentsContainingFrom = getSegmentsContainingNode(fromCell, fromNode);
-    const segmentsContainingTo = getSegmentsContainingNode(toCell, toNode);
+        console.log("========= Start path search");
 
-    // Check if we have any segments in common.
-    const pathsOnSameSegment
-        = checkFromToIsSameSegment(segmentsContainingFrom, segmentsContainingTo, fromNode, toNode, fromCell);
-    if (pathsOnSameSegment) {
+        await gridMap.prefetch(
+            [fromCoord, toCoord].map(coord => gridMap.cellIDFor(coord)));
+
+        const { nodeID: fromNode, cell: fromCell } = await getNearestNodeAndCell(gridMap, fromCoord);
+        const { nodeID: toNode, cell: toCell } = await getNearestNodeAndCell(gridMap, toCoord);
+
+        console.log("Fetched from/to: " + (Date.now() - tStart));
+        tPrev = Date.now();
+
+        const segmentsContainingFrom = getSegmentsContainingNode(fromCell, fromNode);
+        const segmentsContainingTo = getSegmentsContainingNode(toCell, toNode);
+
+        // Check if we have any segments in common.
+        const pathsOnSameSegment
+            = checkFromToIsSameSegment(segmentsContainingFrom, segmentsContainingTo, fromNode, toNode, fromCell);
+        if (pathsOnSameSegment) {
+            return {
+                status: "OK",
+                path: pathsOnSameSegment,
+            };
+        }
+
+        console.log("Checked for common segment: " + (Date.now() - tStart) + " " + (Date.now() - tPrev));
+        tPrev = Date.now();
+
+        const reversedPickedSegments =
+            compute(segmentsContainingFrom, segmentsContainingTo, strategy);
+
+        console.log("Searched shortest path: " + (Date.now() - tStart) + " " + (Date.now() - tPrev));
+        tPrev = Date.now();
+
+        const nodes = await toNodes(gridMap, fromNode, toNode, reversedPickedSegments);
+
+        console.log("Constructed nodes list: " + (Date.now() - tStart) + " " + (Date.now() - tPrev));
+        tPrev = Date.now();
+
         return {
             status: "OK",
-            path: pathsOnSameSegment,
+            path: nodes,
         };
+    } catch (err) {
+        console.log("error", err);
+        return {
+            status: "error",
+            message: "Server error",
+        }
     }
-    const reversedPickedSegments =
-        compute(segmentsContainingFrom, segmentsContainingTo, strategy);
-    const nodes = await toNodes(gridMap, fromNode, toNode, reversedPickedSegments);
-    // return nodes;
-
-    return {
-        status: "OK",
-        path: nodes,
-    };
 }
