@@ -3,32 +3,8 @@ import { Map, TileLayer, Marker, Popup } from 'react-leaflet-universal';
 
 const useStyles = makeStyles((theme) => ({
     root: {
-        // backgroundColor: "blue",
         height: "100%",
     },
-    topBanner: {
-        flexShrink: "1",
-        flexGrow: "0",
-        // backgroundColor: "gray",
-        paddingLeft: "4px",
-        paddingRight: "4px",
-    },
-    main: {
-        display: "flex",
-        // backgroundColor: "yellow",
-        height: "100%",
-        flexDirection: "column",
-    },
-    mapContainer: {
-        flex: "1 1 auto",
-        minHeight: "100px",
-    },
-    errorMessage: {
-        color: "red",
-    },
-    warningMessage: {
-        backgroundColor: "#ffffcc",
-    }
 }));
 
 function parseCoordString(str) {
