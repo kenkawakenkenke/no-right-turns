@@ -132,7 +132,7 @@ function Map({ fromCoord, toCoord, shortestPath, callback }) {
                 whenCreated={mapInstance => {
                     setMapRef(mapInstance);
                 }}
-                bounds={computeBounds(fromCoord, toCoord, shortestPath)}
+                // bounds={computeBounds(fromCoord, toCoord, shortestPath)}
                 style={{
                     width: "100%",
                     height: "100%",
