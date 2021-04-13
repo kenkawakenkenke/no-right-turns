@@ -92,14 +92,23 @@ function Map({ fromCoord, toCoord, shortestPath, callback }) {
     const toMarkerRef = useRef(null)
     const [mapRef, setMapRef] = useState();
 
+    console.log("do resize");
+    window.dispatchEvent(new Event('resize'));
+    const bounds = computeBounds(fromCoord, toCoord, shortestPath);
+    if (mapRef) {
+        console.log("set bounds", bounds);
+        mapRef.fitBounds(bounds);
+    }
+
     useEffect(() => {
         if (!mapRef) {
-            console.log("mapt not set yet");
+            console.log("map not set yet");
             return;
         }
-        const bounds = computeBounds(fromCoord, toCoord, shortestPath);
+        // const bounds = computeBounds(fromCoord, toCoord, shortestPath);
+        console.log("set bounds in effect");
         mapRef.fitBounds(bounds);
-    }, [fromCoord, toCoord, shortestPath]);
+    }, [bounds]);
 
     const fromEventHandlers = {
         dragend() {
@@ -130,7 +139,7 @@ function Map({ fromCoord, toCoord, shortestPath, callback }) {
                 whenCreated={mapInstance => {
                     setMapRef(mapInstance);
                 }}
-                bounds={computeBounds(fromCoord, toCoord, shortestPath)}
+                bounds={bounds}
                 style={{
                     width: "100%",
                     height: "100%",
